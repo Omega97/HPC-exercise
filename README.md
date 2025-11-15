@@ -46,12 +46,12 @@ The exam is split into **two independent exercises**:
 - [x] Added personal notes:  
   - `data/notes/exercise_notes.md`  
   - `data/notes/orfeo.md`
+- [x] Downloaded and extracted OSU Micro-Benchmarks v7.3 from [MVAPICH site](https://mvapich.cse.ohio-state.edu/benchmarks/)
 - [ ] Confirmed SSH access to ORFEO cluster:  
   ```bash
   ssh ocusmafait@195.14.102.215
   ```
 - [ ] Tested login and navigation on login node
-- [ ] Downloaded OSU Micro-Benchmarks v7.3 from [MVAPICH site](https://mvapich.cse.ohio-state.edu/benchmarks/)
 - [ ] Created `exercise1/osu-micro-benchmarks-7.3/` directory
 
 ---
