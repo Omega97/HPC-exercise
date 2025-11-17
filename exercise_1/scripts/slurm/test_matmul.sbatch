@@ -6,8 +6,8 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=64
 #SBATCH --time=00:10:00
-#SBATCH --output=../data/test_matmul_%j.out
-#SBATCH --error=../data/test_mat
+#SBATCH --output=../results/test_matmul_%j.out
+#SBATCH --error=../results/test_mat
 
 module purge
 module load intel/2023
