@@ -104,7 +104,7 @@ slides/_build/
 # ─────────────────────────────────────────────────────────────────────────────
 # Data (optional: ignore heavy local data; keep a placeholder)
 # ─────────────────────────────────────────────────────────────────────────────
-data/
+private/
 !data/.gitkeep
 
 # Figures generated at runtime (optional)
