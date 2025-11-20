@@ -2,6 +2,7 @@ import numpy as np
 import time
 import sys
 
+
 def measure_matrix_multiplication(n):
     A = np.random.rand(n, n).astype(np.float64)
     B = np.random.rand(n, n).astype(np.float64)
@@ -11,6 +12,7 @@ def measure_matrix_multiplication(n):
     C = np.dot(A, B)
     end = time.perf_counter()
     return end - start
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:

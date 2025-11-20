@@ -20,13 +20,17 @@ This is the exercise for Prof. Cozzini section of the 2023/2024 HPC course. It c
 
 The Open MPI library implements several algorithms to perform collective operations according to many different parameters. The exercise consists of an evaluation of some of them for two different collective operations:
 
-- Broadcast operation: mandatory for all a collective operation at your choice among the following four: gather, scatter, barrier, reduce. You are supposed to estimate the latency of default Open MPI implementation, varying the number of processes and the size of the messages exchanged and then compare this latter with the values you obtain using different algorithms.
+- Broadcast operation: mandatory for all, a collective operation at your choice among the following four. You are supposed to estimate the latency of default Open MPI implementation, varying the number of processes and the size of the messages exchanged and then compare this latter with the values you obtain using different algorithms.
+  - gather,
+  - scatter, 
+  - barrier, 
+  - reduce. 
 
-- The exercise does not require any programming effort: students are supposed to use a well-known MPI benchmark: the OSU one and they are supposed to run them on at least two nodes of the ORFEO cluster, choosing among Epyc, thin and fat, using all the available cores on a single node.
+- The exercise does not require any programming effort: students are supposed to use a well-known MPI benchmark: the OSU one and they are supposed to run it on at least two nodes of the ORFEO cluster, choosing among Epyc, thin and fat, using all the available cores on a single node.
 
 #### Steps to be performed
 
-* Download and compile the OSU benchmark available ON this page: https://mvapich.cse.ohio-state.edu/benchmarks/ .More detailed instruction about compilation can be found here.
+* Download and compile the OSU benchmark available ON this page: https://mvapich.cse.ohio-state.edu/benchmarks/ . More detailed instruction about compilation can be found here.
 * Select 2 whole computational nodes, i.e. two [epyc|thin|fat] nodes
 * Select an additional blocking MPI collective operation you want to test among one of the four listed above. The collective benchmarks binaries files are placed under osu-micro-benchmarks-7.3/c/mpi/collective/blocking directory.
 * Familiarize with the osu_bcast and the additional collective operation you choose: run several repetitions of the programs and collect performance numbers, estimating the error in order to have a baseline for the two operations. Look at MPIrun osu_bcast --help to have all options printed out, consider to increment warmup iterations(-x) and total iterations (-i).
@@ -50,9 +54,9 @@ By means of the `ompi_info` we can see the detailed information about the Open M
 
 In particular, to retrive all parameters for collective calls use : `ompi_info --param coll all --level 9`.
 
-To enable this choice the following parameter must be specify:
+To enable this choice the following parameter must be specified:
 
-MCA coll tuned: parameter "coll_tuned_use_dynamic_rules" (current value: "false", data source: default, level: 6 tuner/all, type: bool)
+`MCA coll tuned`: parameter "coll_tuned_use_dynamic_rules" (current value: "false", data source: default, level: 6 tuner/all, type: bool)
 Switch used to decide if we use static (compiled/if statements) or dynamic (built at runtime) decision function rules Valid values: 0: f|false|disabled|no|n, 1: t|true|enabled|yes|y
 
 The parameters for the five operation we focus on are the following.
@@ -157,10 +161,9 @@ that provides the following output:
 
 The program gives the latency on 128 processors with the default algorithm chosen automatically by Open MPI. One can now play with other algorithms, for instance, number 3 (pipeline):
 
- ```
-$ mpirun  --mca coll_tuned_use_dynamic_rules true --mca coll_tuned_bcast_algorithm 3 osu_bcast
+`$mpirun  --mca coll_tuned_use_dynamic_rules true --mca coll_tuned_bcast_algorithm 3 osu_bcast` (3 instead of 0)
 
-
+```
 # OSU MPI Broadcast Latency Test v7.3
 # Datatype: MPI_CHAR.
 # Size       Avg Latency(us)

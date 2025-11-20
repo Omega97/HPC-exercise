@@ -6,6 +6,22 @@ HPC Exercise
 
 ---
 
+## Connect to Orfeo
+
+1) Fire up Command Prompt as Admin `Win + X -> A`
+
+2) Run WSL (Windows Subsystem for Linux)
+```
+wsl
+```
+
+3) Connect
+```
+ssh -i ~/.ssh/orfeo_key ocusmafait@195.14.102.215
+```
+
+---
+
 ## Deliverables
 
 The exam consists of:
@@ -47,12 +63,12 @@ The exam is split into **two independent exercises**:
   - `data/notes/exercise_notes.md`  
   - `data/notes/orfeo.md`
 - [x] Downloaded and extracted OSU Micro-Benchmarks v7.3 from [MVAPICH site](https://mvapich.cse.ohio-state.edu/benchmarks/)
-- [ ] Confirmed SSH access to ORFEO cluster:  
+- [x] Confirmed SSH access to ORFEO cluster:  
   ```bash
   ssh ocusmafait@195.14.102.215
   ```
-- [ ] Tested login and navigation on login node
-- [ ] Created `exercise1/osu-micro-benchmarks-7.3/` directory
+- [x] Tested login and navigation on login node
+- [x] Created `exercise1/osu-micro-benchmarks-7.3/` directory
 
 ---
 

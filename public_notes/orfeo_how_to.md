@@ -93,3 +93,14 @@ git add exercise_1/data/test_matmul_690431.out
 git commit -m "Add working matrix multiplication benchmark + real ORFEO results (519 GFLOPS @ 8000×8000)"
 git push
 ```
+
+
+**Confronto diretto: laptop vs ORFEO (1 nodo EPYC completo, 64 core fisici)**
+
+| Dimensione | Laptop   | ORFEO (epyc006) | Speed-up | GFLOPS laptop* | GFLOPS ORFEO |
+|------------|----------|-----------------|----------|----------------|--------------|
+| 1000×1000  | 0.010 s  | 0.0147 s        | ~0.7×    | ~136 GFLOPS    | 136 GFLOPS   |
+| 2000×2000  | 0.071 s  | 0.0616 s        | 1.15×    | ~225 GFLOPS    | 260 GFLOPS   |
+| 4000×4000  | 0.461 s  | 0.3641 s        | 1.27×    | ~278 GFLOPS    | 352 GFLOPS   |
+| 6000×6000  | 1.552 s  | 1.0030 s        | 1.55×    | ~349 GFLOPS    | 431 GFLOPS   |
+| 8000×8000  | 3.537 s  | 1.9742 s        | **1.79×**| ~410 GFLOPS    | **519 GFLOPS**|
