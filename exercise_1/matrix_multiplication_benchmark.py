@@ -68,8 +68,8 @@ def test_performance(start=1000, stop=5000, step=200):
     omega = 1/tau
     print(f"\nFitted model: t = tau * (n/1000)^p")
     print()
-    print(f"  tau = {tau:.4f}  <- characteristic time [s]")
-    print(f"    p = {m:.3f}  <- power [1]")
+    print(f"  tau = {tau:.5f}  <- characteristic time [s]")
+    print(f"    p = {m:.2f}  <- power [1]")
     print()
     print(f"omega = {omega:.1f} <- frequency [s^-1] (higher is better)")
 
