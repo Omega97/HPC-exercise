@@ -1,6 +1,8 @@
+
 # Exercise 1: Compare different Open MPI algorithms for collective operations.
 
-This is the exercise for Prof. Cozzini section of the 2023/2024 HPC course. It consists of several possible exercises: please read carefully and decide which one to take.
+This is the exercise for Prof. Cozzini section of the 2023/2024 HPC course.
+It consists of several possible exercises: please read carefully and decide which one to take.
 
 ---
 
@@ -24,7 +26,7 @@ The Open MPI library implements several algorithms to perform collective operati
   - gather,
   - scatter, 
   - barrier, 
-  - reduce. 
+  - reduce.
 
 - The exercise does not require any programming effort: students are supposed to use a well-known MPI benchmark: the OSU one and they are supposed to run it on at least two nodes of the ORFEO cluster, choosing among Epyc, thin and fat, using all the available cores on a single node.
 
@@ -44,8 +46,11 @@ The Open MPI library implements several algorithms to perform collective operati
 
 ## How to select the Open MPI algorithms available
 
-Open MPI architecture is based on software components, plugged into the library kernel. A component provides functionality with specific implementation features. For instance, a collective component known as *Tuned* implements different algorithms for each collective operation defined in MPI as a sequence of point-to-point transmissions between the involved processes.
-By means of the `ompi_info` we can see the detailed information about the Open MPI implementation and parameter that one can choose in order to select different algorithms. In the following we report the parameter you neeed to choose to select different algorithms for the following collective operations:
+Open MPI architecture is based on software components, plugged into the library kernel. 
+A component provides functionality with specific implementation features. 
+For instance, a collective component known as *Tuned* implements different algorithms for each collective operation defined in MPI as a sequence of point-to-point transmissions between the involved processes.
+By means of the `ompi_info` we can see the detailed information about the Open MPI implementation and parameter that one can choose in order to select different algorithms. 
+In the following we report the parameter you neeed to choose to select different algorithms for the following collective operations:
 - `barrier`
 - `broadcast`
 - `reduce`
@@ -211,7 +216,7 @@ Every algorithm implementing the broadcast in the *Tuned* component defines a co
 cess has two children, and hence data is transmitted from each
 node to both children (*Fig. (c)*). Segmentation technique is employed in this algorithm. For simplicity we assume that the
 binary tree is complete, then P = 2H −1 where H is the height of the tree, H = log 2(P + 1).
-![Image](./data/images/algs.png)
+![Image](./PUBLIC/images/algs.png)
 
 In [Reference 1](https://doi.org/10.1016/j.jpdc.2022.03.012) all other algorithms are depicted and discussed.
 
@@ -244,6 +249,6 @@ $ mpirun -np 2 --cpu-list 0,8  osu_latency
 
 With the help of the latency estimated above we can develop an example of naive model for the broadcast collective while the pipeline algorithm is selected. A naive model with fixed message size is showed below and compared with the true measures collected changing the broadcast communication algorithm and choosing *core* mapping. Many other models, comparison and option are possible. The procedure is similar in case of multiple nodes.
 
-![Image](./data/images/naive_model.png )
+![Image](./PUBLIC/images/naive_model.png )
 
 When building the model of collective keep in mind the mapping specified throught the flag `--map-by`, and the architecture that you are running on.

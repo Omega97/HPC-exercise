@@ -1,4 +1,6 @@
-# HPC-exercise
+
+# HPC-exercise 💻
+
 HPC Exercise
 
 **High-Performance Computing Exam Project – 2023/2024**  
@@ -9,16 +11,8 @@ HPC Exercise
 ## Connect to Orfeo
 
 1) Fire up Command Prompt as Admin `Win + X -> A`
-
-2) Run WSL (Windows Subsystem for Linux)
-```
-wsl
-```
-
-3) Connect
-```
-ssh -i ~/.ssh/orfeo_key ocusmafait@195.14.102.215
-```
+2) Run WSL (Windows Subsystem for Linux)`wsl`
+3) Connect `ssh -i ~/.ssh/orfeo_key ocusmafait@195.14.102.215`
 
 ---
 

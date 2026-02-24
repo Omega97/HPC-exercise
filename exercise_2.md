@@ -1,3 +1,4 @@
+
 # Exercise 2: Implement a broadcast algorithm or a all-to-all algorithm in distributed memory
 
 This second exercise, given for the course of 2023/2024 academic year, requires more coding than exercise 1.
