@@ -1,0 +1,10 @@
+├── 📄 average_latency_vs_message_size.png
+├── 📄 barrier_comparison.png
+├── 📄 barrier_comparison_average.png
+├── 📄 barrier_linear_regression.png
+├── 📄 bcast_epyc_binary_tree.png
+├── 📄 bcast_epyc_linear_chain.png
+├── 📄 bcast_epyc_size.png
+├── 📄 bcast_epyc_thin.png
+├── 📄 bcast_thin_algorithm.png
+└── 📄 bcast_thin_size.png

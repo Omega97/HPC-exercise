@@ -1,0 +1,15 @@
+plots/
+
+├── 📄 mandelbrot_set.pgm
+├── 📄 mandelbrot_set.png
+├── 📄 strong_scaling-hybrid_scaling.png
+├── 📄 strong_scaling.png
+├── 📄 walltime-hybrid_scaling.png
+├── 📄 walltime.png
+├── 📄 weak_scaling-hybrid_scaling.png
+└── 📄 weak_scaling.png
+
+──────────────────────────────────────────────────
+Summary:
+  📁 Folders: 0
+  📄 Files: 8

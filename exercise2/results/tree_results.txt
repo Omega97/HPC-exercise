@@ -1,0 +1,13 @@
+results/
+
+├── 📄 strong_scaling_MPI_EPYC.csv
+├── 📄 strong_scaling_OMP_EPYC-hybrid2.csv
+├── 📄 strong_scaling_OMP_EPYC.csv
+├── 📄 weak_scaling_MPI_EPYC.csv
+├── 📄 weak_scaling_OMP_EPYC-hybrid2.csv
+└── 📄 weak_scaling_OMP_EPYC.csv
+
+──────────────────────────────────────────────────
+Summary:
+  📁 Folders: 0
+  📄 Files: 6
