@@ -14,7 +14,7 @@ It consists of several possible exercises: please read carefully and decide whic
 
 * Results and numbers of the exercises should be presented (also with the help of slides) in a max 10 minutes presentation: this will be part of the exam. A few more questions on the topic of the courses will be asked at the end of the presentation.
 
-* The report should clearly explain which software stack we should use to compile the codes and run all the programs you used in your exercises. Providing well-done Makefiles/scripts to automatize the work is highly appreciated.
+* The report should clearly explain **which software stack we should use to compile the codes and run all the programs you used** in your exercises. Providing well-done Makefiles/scripts to automatize the work is highly appreciated.
 
 ### The exercise: Compare different Open MPI algorithms for collective operations.
 
@@ -23,41 +23,41 @@ It consists of several possible exercises: please read carefully and decide whic
 The Open MPI library implements several algorithms to perform collective operations according to many different parameters. The exercise consists of an evaluation of some of them for two different collective operations:
 
 - Broadcast operation: mandatory for all, a collective operation at your choice among the following four. You are supposed to estimate the latency of default Open MPI implementation, varying the number of processes and the size of the messages exchanged and then compare this latter with the values you obtain using different algorithms.
-  - gather,
-  - scatter, 
-  - barrier, 
-  - reduce.
+  - `gather`,
+  - `scatter`, 
+  - `barrier`, 
+  - `reduce`.
 
-- The exercise does not require any programming effort: students are supposed to use a well-known MPI benchmark: the OSU one and they are supposed to run it on at least two nodes of the ORFEO cluster, choosing among Epyc, thin and fat, using all the available cores on a single node.
+- **The exercise does not require any programming effort**: students are supposed to use a well-known MPI benchmark: the OSU one and they are supposed to run it on at least two nodes of the ORFEO cluster, choosing among Epyc, thin and fat, using all the available cores on a single node.
 
 #### Steps to be performed
 
-* Download and compile the OSU benchmark available ON this page: https://mvapich.cse.ohio-state.edu/benchmarks/ . More detailed instruction about compilation can be found here.
+* Download and compile the OSU benchmark available on this page: https://mvapich.cse.ohio-state.edu/benchmarks/ . More detailed instruction about compilation can be found here.
 * Select 2 whole computational nodes, i.e. two [epyc|thin|fat] nodes
 * Select an additional blocking MPI collective operation you want to test among one of the four listed above. The collective benchmarks binaries files are placed under osu-micro-benchmarks-7.3/c/mpi/collective/blocking directory.
-* Familiarize with the osu_bcast and the additional collective operation you choose: run several repetitions of the programs and collect performance numbers, estimating the error in order to have a baseline for the two operations. Look at MPIrun osu_bcast --help to have all options printed out, consider to increment warmup iterations(-x) and total iterations (-i).
+* Familiarize with the osu_bcast and the additional collective operation you choose: **run several repetitions of the programs and collect performance numbers**, estimating the error in order to have a baseline for the two operations. Look at MPIrun osu_bcast --help to have all options printed out, consider to increment warmup iterations(-x) and total iterations (-i).
 * Select for the two collective operation (bcast, mandatory for all, and the one you selected) at most three possible algorithms and perform the same set of measurements of the previous step.
 * Collect and compare numbers among the baseline and the algorithms you choose.
 * Try to understand/infer the performance model behind the algorithms you selected, taking into consideration the architecture on which they are being executed.
-* Report your result in a nice report and prepare a short presentation (no more than 10 slides)
+* Report your result in a nice **report** and prepare a **short presentation** (no more than 10 slides)
 * Feel free to experiment with different messages size and task mapping with --map-by option of MPIrun.
 
 ---
 
-## How to select the Open MPI algorithms available
+## How to select the available Open MPI algorithms
 
 Open MPI architecture is based on software components, plugged into the library kernel. 
 A component provides functionality with specific implementation features. 
 For instance, a collective component known as *Tuned* implements different algorithms for each collective operation defined in MPI as a sequence of point-to-point transmissions between the involved processes.
 By means of the `ompi_info` we can see the detailed information about the Open MPI implementation and parameter that one can choose in order to select different algorithms. 
-In the following we report the parameter you neeed to choose to select different algorithms for the following collective operations:
+In the following we report the parameter you need to use to select different algorithms for the following collective operations:
 - `barrier`
 - `broadcast`
 - `reduce`
 - `gather`
 - `scatter`
 
-In particular, to retrive all parameters for collective calls use : `ompi_info --param coll all --level 9`.
+In particular, to retrieve all parameters for collective calls, use: `ompi_info --param coll all --level 9`.
 
 To enable this choice the following parameter must be specified:
 
@@ -205,7 +205,7 @@ As one can notice the difference is **remarkable**.
 
 In the broadcast operation `MPI_Bcast` a process called root sends a message with the same data to all processes in the communicator. Messages can be segmented into transmissions. Segmentation of messages is a common technique used for increasing the communication parallelism by avoiding the rendezvous protocol, and hence, improving the performance. It consists of dividing up the message into smaller fragments called segments and sending them in sequence.
 
-Every algorithm implementing the broadcast in the *Tuned* component defines a communication graph with a specific topology between the P ranks in the communicator. Ranks are the nodes in the graph, and they are mapped to the processes of the parallel machine. Some features and topology of the broadcast algorithms implemented in Open MPI Tuned component are listed below (only 3 listed for brevity, figures from **[1]**):
+Every algorithm implementing the broadcast in the *Tuned* component defines a communication graph with a specific topology between the P ranks in the communicator. Ranks are the nodes in the graph, and they are mapped to the processes of the parallel machine. Some features and topologies of the broadcast algorithms implemented in Open MPI Tuned component are listed below (only 3 listed for brevity, figures from **[1]**):
 
 - *Flat tree algorithm*. The algorithm employs a single level tree topology shown in *Fig. (a)* where the root node has P-1
  children. The message is transmitted to child nodes without segmentation.
@@ -216,7 +216,7 @@ Every algorithm implementing the broadcast in the *Tuned* component defines a co
 cess has two children, and hence data is transmitted from each
 node to both children (*Fig. (c)*). Segmentation technique is employed in this algorithm. For simplicity we assume that the
 binary tree is complete, then P = 2H −1 where H is the height of the tree, H = log 2(P + 1).
-![Image](./PUBLIC/images/algs.png)
+![Image](../PUBLIC/images/algs.png)
 
 In [Reference 1](https://doi.org/10.1016/j.jpdc.2022.03.012) all other algorithms are depicted and discussed.
 
@@ -249,6 +249,6 @@ $ mpirun -np 2 --cpu-list 0,8  osu_latency
 
 With the help of the latency estimated above we can develop an example of naive model for the broadcast collective while the pipeline algorithm is selected. A naive model with fixed message size is showed below and compared with the true measures collected changing the broadcast communication algorithm and choosing *core* mapping. Many other models, comparison and option are possible. The procedure is similar in case of multiple nodes.
 
-![Image](./PUBLIC/images/naive_model.png )
+![Image](../PUBLIC/images/naive_model.png )
 
-When building the model of collective keep in mind the mapping specified throught the flag `--map-by`, and the architecture that you are running on.
+When building the model of collective keep in mind the mapping specified through the flag `--map-by`, and the architecture that you are running on.
