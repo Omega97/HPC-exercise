@@ -12,7 +12,7 @@
 # THIN: 24 tasks per node
 # EPYC: 128 tasks per node
 
-module load openMPI/4.1.5/gnu/12.2.1
+module load openMPI/4.1.6
 
 # Output directory
 output_dir="../results/"

@@ -1,11 +1,9 @@
 
 # Exercise 1 Report
 
-
-
 ---
 
-# TODO
+## TODOs
 
 Based on the exercise requirements and your existing scripts, here is the strategic list of jobs you need to submit to the ORFEO cluster to complete Exercise 1.
 
@@ -39,7 +37,7 @@ You already have `bcast_latencies.sh` and `barrier_latencies.sh`. You need to cr
 *   **File:** `scripts/barrier_epyc.sh` (Copy of `barrier_latencies.sh`)
     *   Ensure `#SBATCH --partition=EPYC`
     *   Ensure `#SBATCH --ntasks-per-node=128`
-
+   
 #### 2. For THIN Nodes (Create new versions)
 *   **File:** `scripts/bcast_thin.sh`
     *   Change `#SBATCH --job-name=ex1THINbc`

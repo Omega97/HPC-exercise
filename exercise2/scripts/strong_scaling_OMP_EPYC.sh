@@ -10,7 +10,7 @@
 #SBATCH --nodelist=epyc003
 #SBATCH --exclusive
 
-module load openMPI/4.1.5/gnu/12.2.1
+module load openMPI/4.1.6
 
 # OpenMP Strong scaling experiment for the Mandelbrot set
 # The problem size is kept constant

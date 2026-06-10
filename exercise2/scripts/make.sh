@@ -4,7 +4,7 @@
 while getopts "abc" opt; do
   case $opt in
     a) # Load the OpenMPI module in the cluster
-      module load openMPI/4.1.5/gnu/12.2.1
+      module load openMPI/4.1.6
       ;;
     b) # Build binary files with CMake
       cd ..

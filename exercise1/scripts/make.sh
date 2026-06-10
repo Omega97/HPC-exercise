@@ -1,19 +1,25 @@
-module load openMPI/4.1.5/gnu/12.2.1
+module load openMPI/4.1.6
 
-# Move to parent directory
+# Go to exercise1 directory
 cd ..
-# Download and install the OSU Micro-Benchmarks library
+
+# Download and build OSU Micro-Benchmarks
 wget https://mvapich.cse.ohio-state.edu/download/mvapich/osu-micro-benchmarks-7.3.tar.gz
 tar -xvf osu-micro-benchmarks-7.3.tar.gz
-rm -rf osu-micro-benchmarks-7.3.tar.gz 
+rm -f osu-micro-benchmarks-7.3.tar.gz
+
 cd osu-micro-benchmarks-7.3
-./configure CC=/usr/bin/mpicc 
-make
-make install
-# Create a bin directory and copy the compiled files to perform benchmarking of the broadcast and barrier operations
-cd ../
-mkdir bin
+./configure
+make -j
+
+# Copy only the benchmarks we need
+cd ..
+mkdir -p bin
 cp osu-micro-benchmarks-7.3/c/mpi/collective/blocking/osu_bcast bin/
 cp osu-micro-benchmarks-7.3/c/mpi/collective/blocking/osu_barrier bin/
-# Remove the osu-micro-benchmarks-7.3 directory
+
+# Clean up
 rm -rf osu-micro-benchmarks-7.3
+
+echo "OSU benchmarks compiled successfully with openMPI/4.1.6"
+ls -l bin/
