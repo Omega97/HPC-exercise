@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH --job-name=ex1EPYCbc            
+#SBATCH --job-name=ex1THINbc            
 #SBATCH --nodes=2
-#SBATCH --ntasks-per-node=128      
-#SBATCH --output=../logs/output_epyc.%j.out
-#SBATCH --error=../logs/error_epyc.%j.err  
+#SBATCH --ntasks-per-node=24      
+#SBATCH --output=../logs/output_thin.%j.out
+#SBATCH --error=../logs/error_thin.%j.err  
 #SBATCH --time=02:00:00
-#SBATCH --partition=EPYC
+#SBATCH --partition=THIN
 #SBATCH --exclusive
 
 # THIN: 24 tasks per node
@@ -17,7 +17,7 @@ module load openMPI/4.1.6
 output_dir="../results/"
 
 # Output file for each algorithm and collective operation
-output_file="${output_dir}bcastEPYC.csv"
+output_file="${output_dir}bcastTHIN.csv"
 
 # Broadcast algorithms:
 # 0: ignore : baseline
@@ -30,7 +30,7 @@ collective_operation="bcast"
 
 # List of number of processors
 # number_processors=({4..48..4}) # 12 in total
-number_processors=(2 4 8 16 32 48 64 96 128 176 224 256) # 12 in total
+number_processors=(2 4 8 12 16 24 48) # 12 in total
 
 # Add CSV header
 echo "Algorithm,Processors,Size(bytes),Avg_Latency(us)" >> ${output_file}

@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH --job-name=ex1EPYCbc            
+#SBATCH --job-name=ex1THINarr          
 #SBATCH --nodes=2
-#SBATCH --ntasks-per-node=128      
-#SBATCH --output=../logs/output_epyc.%j.out
-#SBATCH --error=../logs/error_epyc.%j.err  
+#SBATCH --ntasks-per-node=24     
+#SBATCH --output=../logs/output_thin.%j.out
+#SBATCH --error=../logs/error_thin.%j.err  
 #SBATCH --time=02:00:00
-#SBATCH --partition=EPYC
+#SBATCH --partition=THIN
 #SBATCH --exclusive
 
 # THIN: 24 tasks per node
@@ -17,43 +17,44 @@ module load openMPI/4.1.6
 output_dir="../results/"
 
 # Output file for each algorithm and collective operation
-output_file="${output_dir}bcastEPYC.csv"
+output_file="${output_dir}barrierTHIN.csv"
 
-# Broadcast algorithms:
+# Barrier algorithms:
 # 0: ignore : baseline
-# 1: basic linear
-# 2: chain
-# 5: binary tree
-bcast_algorithms=(0 1 2 5)
+# 1: linear
+# 2: double_ring
+# 4: bruck
+barrier_algorithms=(0 1 2 4)
 # Collect operation
-collective_operation="bcast"
+collective_operation="barrier"
 
 # List of number of processors
 # number_processors=({4..48..4}) # 12 in total
-number_processors=(2 4 8 16 32 48 64 96 128 176 224 256) # 12 in total
+# number_processors=(2 4 8 16 32 64 128 256) # 8 in total
+number_processors=(2 4 8 12 16 24 48) # 12 in total
 
 # Add CSV header
-echo "Algorithm,Processors,Size(bytes),Avg_Latency(us)" >> ${output_file}
+echo "Algorithm,Processors,Avg_Latency(us)" >> ${output_file}
 
 # Iterations to reduce noise
-iterations=10
+iterations=20
 
 for iteration in $(seq 1 $iterations); do
   # Iterate over each algorithm for the current collective operation
-  for bcast_algorithm in "${bcast_algorithms[@]}"; do
+  for barrier_algorithm in "${barrier_algorithms[@]}"; do
       # Iterate over each number of processors
       for processors in "${number_processors[@]}"; do
         # Run MPI command with specified parameters and append results to the output file
         result=$(mpirun -np ${processors} \
           --map-by core \
           --mca coll_tuned_use_dynamic_rules true \
-          --mca coll_tuned_${collective_operation}_algorithm ${bcast_algorithm} \
+          --mca coll_tuned_${collective_operation}_algorithm ${barrier_algorithm} \
           ../bin/osu_${collective_operation} \
           -i 1e4 \
           -x 1e4)
 
         # Remove unnecessary lines, format, and append to CSV file
-        tail -n +5 <<< "$result" | awk "{print \"${bcast_algorithm},${processors},\" \$1 \",\" \$2}" >> ${output_file}
+        tail -n +4 <<< "$result" | awk "{print \"${barrier_algorithm},${processors},\" \$1}" >> ${output_file}
       done
   done
 done 
@@ -63,7 +64,7 @@ done
 # result=$(mpirun -np ${processors} \  
 #   --map-by core \  # Map processes by node, and allocate one core per process
 #   --mca coll_tuned_use_dynamic_rules true \  # Enable dynamic tuning of collective communication algorithms
-#   --mca coll_tuned_${collective_operation}_algorithm ${bcast_algorithm} \  # Specify the tuned algorithm for the current collective operation
+#   --mca coll_tuned_${collective_operation}_algorithm ${barrier_algorithm} \  # Specify the tuned algorithm for the current collective operation
 #   ../bin/osu_${collective_operation} \  # Specify the executable for the current collective operation
 #   -i 1e4 \  # Set the number of warm-up iterations
 #   -x 1e4) # Set the number of total iterations
