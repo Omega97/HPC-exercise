@@ -1,5 +1,8 @@
 module load openMPI/4.1.6
 
+# Ensure we have execute permission (Git sometimes drops +x after pull)
+chmod +x "$0" 2>/dev/null || true
+
 # Go to exercise1 directory
 cd ..
 
