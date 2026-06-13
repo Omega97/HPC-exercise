@@ -1,0 +1,22 @@
+=== TEST PRODOTTO MATRICIALE ===
+Nodo: epyc006.hpc.rd.areasciencepark.it
+Data/Ora: Mon Nov 17 23:41:06 CET 2025
+CPU disponibili: 64
+
+Matrix size: 1000x1000
+Time:        0.0147 s
+Performance: 135.88 GFLOPS
+Matrix size: 2000x2000
+Time:        0.0616 s
+Performance: 259.77 GFLOPS
+Matrix size: 4000x4000
+Time:        0.3641 s
+Performance: 351.51 GFLOPS
+Matrix size: 6000x6000
+Time:        1.0030 s
+Performance: 430.72 GFLOPS
+Matrix size: 8000x8000
+Time:        1.9742 s
+Performance: 518.70 GFLOPS
+
+=== TUTTI I TEST COMPLETATI ===
