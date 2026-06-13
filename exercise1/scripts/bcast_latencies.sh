@@ -2,11 +2,10 @@
 #SBATCH --job-name=ex1EPYCbc            
 #SBATCH --nodes=2
 #SBATCH --ntasks-per-node=128      
-#SBATCH --output=output_epyc.%j.out
-#SBATCH --error=error_epyc.%j.err  
+#SBATCH --output=../logs/output_epyc.%j.out
+#SBATCH --error=../logs/error_epyc.%j.err  
 #SBATCH --time=02:00:00
 #SBATCH --partition=EPYC
-#SBATCH --nodelist=epyc002,epyc004
 #SBATCH --exclusive
 
 # THIN: 24 tasks per node
