@@ -239,8 +239,422 @@ JobID           JobName  Partition      State ExitCode    Elapsed
 ------------ ---------- ---------- ---------- -------- ----------
 1277502       ex1THINbc       THIN    PENDING      0:0   00:00:00
 1277506      ex1THINarr       THIN    PENDING      0:0   00:00:00
-```
-
-
 
 ---
+
+### 2.1 Successful build after permission fix
+
+**What was done:** Re-ran make.sh after chmod +x and captured full output.
+
+**Prompt:**
+```bash
+cd ~/HPC-exercise/exercise1/scripts
+chmod +x make.sh
+./make.sh 2>&1 | tee ~/osu_build.log
+```
+
+**Response (excerpt):**
+```
+ls -l ../bin/
+-rwxr-xr-x ... 332720 ... osu_barrier
+-rwxr-xr-x ... 336696 ... osu_bcast
+OSU benchmarks compiled successfully with openMPI/4.1.6
+```
+
+### 2.2 Small verification of binaries
+
+**What was done:** Loaded module and ran quick 4-process tests on both tools.
+
+**Prompt:**
+```bash
+module load openMPI/4.1.6
+cd ~/HPC-exercise/exercise1
+mpirun -np 4 ./bin/osu_bcast
+mpirun -np 4 ./bin/osu_barrier
+```
+
+**Response (excerpt):**
+Bcast produced normal latency table (1 to 1M bytes).
+Barrier produced single latency value ~1.41 us.
+
+### 2.3 Job submissions
+
+**What was done:** Submitted the four prepared scripts (2 EPYC + 2 THIN).
+
+**Prompt:**
+```bash
+cd ~/HPC-exercise/exercise1/scripts
+sbatch bcast_latencies.sh
+sbatch barrier_latencies.sh
+sbatch bcast_thin.sh
+sbatch barrier_thin.sh
+```
+
+**Response:**
+Submitted batch job 1277489
+Submitted batch job 1277494
+Submitted batch job 1277502
+Submitted batch job 1277506
+
+### 2.4 Post-submission monitoring (initial)
+
+**What was done:** Checked queue right after submission.
+
+**Prompt:**
+```bash
+squeue -u $USER
+```
+
+**Response (excerpt):**
+All four jobs visible as PD (two EPYC, two THIN) with reasons (Resources) or (Priority).
+
+### 2.5 Later monitoring + sacct (EPYC completion)
+
+**What was done:** Checked status after some time.
+
+**Prompt:**
+```bash
+squeue -u $USER
+sacct -u $USER --format=JobID,JobName,Partition,State,ExitCode,Elapsed --starttime=today | grep -v '\.'
+```
+
+**Response (excerpt):**
+EPYC jobs no longer in squeue.
+sacct showed:
+1277489 ex1EPYCbc EPYC TIMEOUT 02:00:07
+1277494 ex1EPYCa EPYC TIMEOUT 02:00:27
+THIN jobs still PENDING.
+
+### 2.6 EPYC error logs
+
+**What was done:** Inspected .err files for the two EPYC jobs.
+
+**Prompt:**
+```bash
+cat logs/error_epyc.1277494.err
+cat logs/error_epyc.1277489.err
+grep -c "ORTE daemon" logs/error_epyc.1277494.err
+```
+
+**Response (excerpt):**
+Repeated "An ORTE daemon has unexpectedly failed after launch..." errors.
+Both jobs ended with:
+slurmstepd: error: *** JOB ... CANCELLED AT ... DUE TO TIME LIMIT ***
+38 ORTE errors counted in the larger .err file.
+
+### 2.7 Partial results from EPYC jobs
+
+**What was done:** Checked results directory after EPYC jobs completed.
+
+**Prompt:**
+```bash
+ls -lh results/
+```
+
+**Response:**
+```
+total 118K
+... _temp_results.txt
+... 4.1K ... barrierEPYC.csv   (Jun 12)
+... 113K ... bcastEPYC.csv     (Jun 11)
+```
+
+### 2.8 Coverage analysis of EPYC CSVs
+
+**What was done:** Ran coverage inspection on the two produced CSVs.
+
+**Prompt:**
+```bash
+cd ~/HPC-exercise/exercise1
+echo "=== bcastEPYC coverage ==="
+cut -d, -f1 results/bcastEPYC.csv | sort | uniq -c
+... (similar for max procs and lines per proc count)
+echo "=== barrierEPYC coverage ==="
+... (same structure)
+```
+
+**Response (key excerpt):**
+bcastEPYC: 2016 lines algo 0, 1764 each for 1/2/5. Reached 256 procs. 609 lines for several proc counts (4/8/32/.../256).
+barrierEPYC: 93 lines algo 0, 84 each for 1/2/4. Reached up to 256 procs in some cases. Lower total volume.
+
+### 2.9 Git commit & push of script changes
+
+**What was done:** Committed the cleaned EPYC scripts + new THIN scripts (plus related changes) from Orfeo.
+
+**Prompt:**
+```bash
+git add exercise1/scripts/bcast_thin.sh exercise1/scripts/barrier_thin.sh exercise1/scripts/bcast_latencies.sh exercise1/scripts/barrier_latencies.sh
+git commit -m "Add THIN versions of OSU measurement scripts + clean EPYC scripts (remove hardcoded nodelist, redirect logs to ../logs/)"
+git push
+```
+
+**Response (excerpt):**
+Commit created. Push succeeded after entering GitHub token (https auth).
+
+### 2.10 Latest cluster queue snapshot
+
+**What was done:** Captured current full queue view (head -30).
+
+**Prompt:**
+```bash
+squeue -o "%.18i %.9P %.8j %.8u %.8T %.10M %.6D %R" | head -30
+```
+
+**Response (excerpt):**
+THIN jobs 1277506 (ex1THINa) and 1277502 (ex1THINb) still PENDING (Priority / node DOWN/DRAINED reason).
+EPYC jobs absent (consistent with prior TIMEOUT).
+Many other users' jobs visible (heavy activity on EPYC/GENOA).
+
+---
+
+### 2.11 Status check + EPYC CSV line counts and coverage summary
+
+**What was done:** Ran squeue and confirmed EPYC CSV line counts + recorded key coverage findings from the partial data collected before the EPYC jobs timed out.
+
+**Prompt:**
+```bash
+cd ~/HPC-exercise/exercise1
+
+echo "=== Current status of our 4 jobs ==="
+squeue -u $USER
+
+echo ""
+echo "=== Quick summary of EPYC data we actually collected ==="
+echo "bcastEPYC.csv lines: $(wc -l < results/bcastEPYC.csv)"
+echo "barrierEPYC.csv lines: $(wc -l < results/barrierEPYC.csv)"
+
+echo ""
+echo "=== Key findings from coverage (for the log) ==="
+echo "bcastEPYC: all 4 algorithms reached 256 processes. High-volume procs (near-full repetitions): 4,8,32,48,64,96,224,256"
+echo "barrierEPYC: all 4 algorithms reached up to 256, but very low points per high proc (only 7-8 instead of 20)"
+```
+
+**Response (excerpt):**
+```
+=== Current status of our 4 jobs ===
+             JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+           1277502      THIN ex1THINb ocusmafa PD       0:00      2 (Nodes required for job are DOWN, DRAINED or reserved for jobs in higher priority partitions)
+           1277506      THIN ex1THINa ocusmafa PD       0:00      2 (Priority)
+
+=== Quick summary of EPYC data we actually collected ===
+bcastEPYC.csv lines: 7309
+barrierEPYC.csv lines: 346
+
+=== Key findings from coverage (for the log) ===
+bcastEPYC: all 4 algorithms reached 256 processes. High-volume procs (near-full repetitions): 4,8,32,48,64,96,224,256
+barrierEPYC: all 4 algorithms reached up to 256, but very low points per high proc (only 7-8 instead of 20)
+```
+
+**Outcome:** THIN jobs remain pending with priority and node availability issues. Confirmed EPYC partial data volumes. bcastEPYC shows strong coverage; barrierEPYC limited.
+
+---
+
+### 2.12 Extraction of bcast data at 256 processes (large message)
+
+**What was done:** Extracted specific size/latency points at 256 procs for 1 MiB message per algorithm to contrast small vs large message regime.
+
+**Prompt:**
+```bash
+cd ~/HPC-exercise/exercise1
+
+echo "=== bcastEPYC at 256 procs, large message (1 MiB) ==="
+for algo in 0 1 2 5; do
+  echo "Algo $algo:"
+  grep "^$algo,256,1048576," results/bcastEPYC.csv
+done
+```
+
+**Response (excerpt):**
+```
+=== bcastEPYC at 256 procs, large message (1 MiB) ===
+Algo 0:
+0,256,1048576,1553.04
+0,256,1048576,1616.61
+0,256,1048576,1880.45
+0,256,1048576,1581.97
+0,256,1048576,1644.31
+0,256,1048576,1492.28
+0,256,1048576,1701.20
+0,256,1048576,1482.11
+Algo 1:
+1,256,1048576,9347.98
+...
+Algo 2:
+2,256,1048576,5932.29
+...
+Algo 5:
+5,256,1048576,9778.67
+...
+```
+
+**Outcome:** At 1 MiB and 256 procs, baseline (algo 0) ~1.5-1.9 ms; tuned algos 5-10 ms (3-6x worse). Contrasts sharply with small-message data at same 256 procs (where all algos low latency, algo 5 best for 1-byte). Directly shows regime-dependent behavior (small: latency/startup; large: segmentation/pipelining per official doc and algorithm topologies).
+
+---
+
+### 2.12 Extraction of bcast data at 256 processes (large message)
+
+**What was done:** Extracted specific size/latency points at 256 procs for 1 MiB message per algorithm to contrast small vs large message regime.
+
+**Prompt:**
+```bash
+cd ~/HPC-exercise/exercise1
+
+echo "=== bcastEPYC at 256 procs, large message (1 MiB) ==="
+for algo in 0 1 2 5; do
+  echo "Algo $algo:"
+  grep "^$algo,256,1048576," results/bcastEPYC.csv
+done
+```
+
+**Response (excerpt):**
+```
+=== bcastEPYC at 256 procs, large message (1 MiB) ===
+Algo 0:
+0,256,1048576,1553.04
+0,256,1048576,1616.61
+0,256,1048576,1880.45
+0,256,1048576,1581.97
+0,256,1048576,1644.31
+0,256,1048576,1492.28
+0,256,1048576,1701.20
+0,256,1048576,1482.11
+Algo 1:
+1,256,1048576,9347.98
+...
+Algo 2:
+2,256,1048576,5932.29
+...
+Algo 5:
+5,256,1048576,9778.67
+...
+```
+
+**Outcome:** At 1 MiB and 256 procs, baseline (algo 0) ~1.5-1.9 ms; tuned algos 5-10 ms (3-6x worse). Contrasts sharply with small-message data at same 256 procs (where all algos low latency, algo 5 best for 1-byte). Directly shows regime-dependent behavior (small: latency/startup; large: segmentation/pipelining per official doc and algorithm topologies).
+
+---
+
+### 2.12 Extraction of bcast data at 256 processes (large message)
+
+**What was done:** Extracted specific size/latency points at 256 procs for 1 MiB message per algorithm to contrast small vs large message regime.
+
+**Prompt:**
+```bash
+cd ~/HPC-exercise/exercise1
+
+echo "=== bcastEPYC at 256 procs, large message (1 MiB) ==="
+for algo in 0 1 2 5; do
+  echo "Algo $algo:"
+  grep "^$algo,256,1048576," results/bcastEPYC.csv
+done
+```
+
+**Response (excerpt):**
+```
+=== bcastEPYC at 256 procs, large message (1 MiB) ===
+Algo 0:
+0,256,1048576,1553.04
+0,256,1048576,1616.61
+0,256,1048576,1880.45
+0,256,1048576,1581.97
+0,256,1048576,1644.31
+0,256,1048576,1492.28
+0,256,1048576,1701.20
+0,256,1048576,1482.11
+Algo 1:
+1,256,1048576,9347.98
+...
+Algo 2:
+2,256,1048576,5932.29
+...
+Algo 5:
+5,256,1048576,9778.67
+...
+```
+
+**Outcome:** At 1 MiB and 256 procs, baseline (algo 0) ~1.5-1.9 ms; tuned algos 5-10 ms (3-6x worse). Contrasts sharply with small-message data at same 256 procs (where all algos low latency, algo 5 best for 1-byte). Directly shows regime-dependent behavior (small: latency/startup; large: segmentation/pipelining per official doc and algorithm topologies).
+
+---
+
+### 2.12 Extraction of bcast data at 256 processes (large message)
+
+**What was done:** Extracted specific size/latency points at 256 procs for 1 MiB message per algorithm to contrast small vs large message regime.
+
+**Prompt:**
+```bash
+cd ~/HPC-exercise/exercise1
+
+echo "=== bcastEPYC at 256 procs, large message (1 MiB) ==="
+for algo in 0 1 2 5; do
+  echo "Algo $algo:"
+  grep "^$algo,256,1048576," results/bcastEPYC.csv
+done
+```
+
+**Response (excerpt):**
+```
+=== bcastEPYC at 256 procs, large message (1 MiB) ===
+Algo 0:
+0,256,1048576,1553.04
+0,256,1048576,1616.61
+0,256,1048576,1880.45
+0,256,1048576,1581.97
+0,256,1048576,1644.31
+0,256,1048576,1492.28
+0,256,1048576,1701.20
+0,256,1048576,1482.11
+Algo 1:
+1,256,1048576,9347.98
+...
+Algo 2:
+2,256,1048576,5932.29
+...
+Algo 5:
+5,256,1048576,9778.67
+...
+```
+
+**Outcome:** At 1 MiB and 256 procs, baseline (algo 0) ~1.5-1.9 ms; tuned algos 5-10 ms (3-6x worse). Contrasts sharply with small-message data at same 256 procs (where all algos low latency, algo 5 best for 1-byte). Directly shows regime-dependent behavior (small: latency/startup; large: segmentation/pipelining per official doc and algorithm topologies).
+
+---
+
+### 2.12 Extraction of bcast data at 256 processes (small messages)
+
+**What was done:** Extracted first few size/latency points at 256 procs for each algorithm from bcastEPYC.csv to contrast small-message behavior.
+
+**Prompt:**
+```bash
+cd ~/HPC-exercise/exercise1
+
+echo "=== bcastEPYC at 256 procs (baseline vs tuned) ==="
+for algo in 0 1 2 5; do
+  echo "Algo $algo:"
+  grep "^$algo,256," results/bcastEPYC.csv | head -3
+done
+```
+
+**Response (excerpt):**
+```
+=== bcastEPYC at 256 procs (baseline vs tuned) ===
+Algo 0:
+0,256,1,17.46
+0,256,2,3.17
+0,256,4,2.20
+Algo 1:
+1,256,1,59.81
+1,256,2,39.84
+1,256,4,44.38
+Algo 2:
+2,256,1,39.76
+2,256,2,18.53
+2,256,4,11.83
+Algo 5:
+5,256,1,7.26
+5,256,2,4.63
+5,256,4,2.37
+```
+
+**Outcome:** At tiny messages (1-4 bytes) on 256 procs, all algos have low latency. Algo 5 is best for 1-byte, baseline (0) competitive or best for 2-4 bytes. (Contrast with overall averages at 256 procs showing baseline much better, due to large-message behavior.)
+
+---
+
+**Note:** Log entries kept brief per current ai-skill.md guidelines (only what was actually done + prompt + key response excerpt). No future plans included. Long repeated console output (e.g. full ORTE spam) truncated to the essential error message + final time-limit line.

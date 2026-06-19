@@ -6,6 +6,8 @@ HPC Exercise
 **High-Performance Computing Exam Project – 2023/2024**  
 **Student: Omar Cusma Fait**
 
+> L'appello successivo è per il 15 di luglio.  Esse3 l'appello per il codice 345SM.  
+
 ---
 
 ## Connect to Orfeo
