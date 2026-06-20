@@ -37,7 +37,7 @@ number_processors=(2 4 8 16 32 48 64 96 128 176 224 256) # 12 in total
 echo "Algorithm,Processors,Avg_Latency(us)" >> ${output_file}
 
 # Iterations to reduce noise
-iterations=20
+iterations=10
 
 for iteration in $(seq 1 $iterations); do
   # Iterate over each algorithm for the current collective operation
@@ -50,8 +50,8 @@ for iteration in $(seq 1 $iterations); do
           --mca coll_tuned_use_dynamic_rules true \
           --mca coll_tuned_${collective_operation}_algorithm ${barrier_algorithm} \
           ../bin/osu_${collective_operation} \
-          -i 1e4 \
-          -x 1e4)
+          -i 500 \
+          -x 500)
 
         # Remove unnecessary lines, format, and append to CSV file
         tail -n +4 <<< "$result" | awk "{print \"${barrier_algorithm},${processors},\" \$1}" >> ${output_file}

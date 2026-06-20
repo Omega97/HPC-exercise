@@ -657,4 +657,239 @@ Algo 5:
 
 ---
 
+### 2.13 Orfeo job status check (2026-06-15)
+
+**What was done:** Checked current queue and historical job states for all four benchmark jobs.
+
+**Prompt:**
+```bash
+squeue -u $USER
+
+sacct -u $USER --starttime=2026-06-11 --format=JobID,JobName,Partition,State,ExitCode,Elapsed | grep -v '\.'
+```
+
+**Response:**
+```
+squeue -u $USER
+(empty — no jobs running)
+
+sacct:
+1277489  ex1EPYCbc   EPYC  TIMEOUT    02:00:07
+1277494  ex1EPYCarr  EPYC  TIMEOUT    02:00:27
+1277502  ex1THINbc   THIN  COMPLETED  00:11:33
+1277506  ex1THINarr  THIN  COMPLETED  00:22:32
+```
+
+**Outcome:** Both THIN jobs finished successfully. Both EPYC jobs hit the 2-hour time limit again. No jobs currently in the queue.
+
+---
+
+### 2.14 THIN results verification (2026-06-15)
+
+**What was done:** Confirmed THIN result files exist and checked line counts.
+
+**Prompt:**
+```bash
+cd ~/HPC-exercise/exercise1
+
+ls -lh results/bcastTHIN.csv results/barrierTHIN.csv
+echo "bcastTHIN lines: $(wc -l < results/bcastTHIN.csv)"
+echo "barrierTHIN lines: $(wc -l < results/barrierTHIN.csv)"
+```
+
+**Response:**
+```
+-rw-r--r-- 1 ocusmafait ocusmafait 6.4K Jun 15 20:48 results/barrierTHIN.csv
+-rw-r--r-- 1 ocusmafait ocusmafait  88K Jun 15 10:24 results/bcastTHIN.csv
+bcastTHIN lines: 5881
+barrierTHIN lines: 561
+```
+
+**Outcome:** THIN data collection complete. `barrierTHIN.csv` has exactly 561 lines (560 data rows + header = 4 algos × 7 proc counts × 20 iterations). `bcastTHIN.csv` has 5881 lines — substantial coverage for analysis.
+
+---
+
+### 2.15 EPYC barrier re-submission (2026-06-15)
+
+**What was done:** Backed up partial barrier data, increased SLURM time limit to 4 hours, cleared incomplete CSV, and resubmitted the EPYC barrier job.
+
+**Prompt:**
+```bash
+cd ~/HPC-exercise/exercise1
+
+cp results/barrierEPYC.csv results/barrierEPYC_partial.csv
+rm results/barrierEPYC.csv
+sed -i 's/#SBATCH --time=02:00:00/#SBATCH --time=04:00:00/' scripts/barrier_latencies.sh
+
+cd scripts
+sbatch barrier_latencies.sh
+```
+
+**Response:**
+```
+Submitted batch job 1303325
+```
+
+**Outcome:** Fresh EPYC barrier run queued as job 1303325 with 4-hour wall time. Partial data preserved in `barrierEPYC_partial.csv`.
+
+> **Correction:** Orfeo enforces a **maximum 2-hour** `#SBATCH --time`. Longer requests are invalid and **hurt queue priority** (shorter jobs jump ahead). The 4-hour change was wrong — revert to `02:00:00`. The real timeout cause is workload size: 20 outer loops × 4 algos × 12 proc counts × `mpirun` with `-i 1e4 -x 1e4` at up to 256 procs (~960 heavy runs in 2 h).
+
+---
+
+### 2.16 Cancel invalid 4-hour job (2026-06-15)
+
+**What was done:** Cancelled job 1303325. Attempted to revert `#SBATCH --time` — `sed` failed (directory passed instead of file); `barrier_latencies.sh` run failed (not in PATH, needs `./`).
+
+**Prompt:**
+```bash
+scancel 1303325
+sed -i 's/#SBATCH --time=04:00:00/#SBATCH --time=02:00:00/' ~/HPC-exercise/exercise1/scripts/
+barrier_latencies.sh
+```
+
+**Response:**
+```
+scancel: (silent success)
+sed: couldn't edit .../scripts/: not a regular file
+-bash: barrier_latencies.sh: command not found
+```
+
+**Outcome:** Job 1303325 cancelled. Script still has `04:00:00` on Orfeo until `sed` targets the file correctly.
+
+---
+
+### 2.17 Orfeo state verification (2026-06-20)
+
+**What was done:** Confirmed Orfeo script time limit and result file status after returning to the project.
+
+**Prompt:**
+```bash
+cd ~/HPC-exercise/exercise1/scripts
+grep '#SBATCH --time' barrier_latencies.sh
+ls -lh ../results/barrierEPYC.csv ../results/barrierEPYC_partial.csv ../results/bcastEPYC.csv
+```
+
+**Response:**
+```
+#SBATCH --time=04:00:00
+ls: cannot access '../results/barrierEPYC.csv': No such file or directory
+-rw-r--r-- 1 ocusmafait ocusmafait 4.1K Jun 19 16:48 ../results/barrierEPYC_partial.csv
+-rw-r--r-- 1 ocusmafait ocusmafait 113K Jun 11 22:42 ../results/bcastEPYC.csv
+```
+
+**Outcome:** Orfeo script still has invalid 4-hour limit (revert never applied). `barrierEPYC.csv` missing; partial backup intact. `bcastEPYC.csv` present.
+
+---
+
+### 2.18 EPYC barrier script fix (2026-06-20)
+
+**What was done:** Reverted time limit to 2 hours and reduced workload so the job can finish within Orfeo limits.
+
+**Prompt:**
+```bash
+cd ~/HPC-exercise/exercise1/scripts
+
+sed -i 's/#SBATCH --time=04:00:00/#SBATCH --time=02:00:00/' barrier_latencies.sh
+sed -i 's/iterations=20/iterations=10/' barrier_latencies.sh
+sed -i 's/-i 1e4/-i 500/; s/-x 1e4/-x 500/' barrier_latencies.sh
+
+grep -E '#SBATCH --time|iterations=|-i |-x ' barrier_latencies.sh
+```
+
+**Response:**
+```
+#SBATCH --time=02:00:00
+iterations=10
+          -i 500 \
+          -x 500)
+```
+
+**Outcome:** Script ready for resubmission. Expected output: ~481 lines (4 algos × 12 proc counts × 10 iterations + header).
+
+---
+
+### 2.19 EPYC barrier job submitted (2026-06-20)
+
+**What was done:** Submitted the fixed EPYC barrier benchmark script to SLURM.
+
+**Prompt:**
+```bash
+sbatch barrier_latencies.sh
+```
+
+**Response:**
+```
+Submitted batch job 1303630
+```
+
+**Outcome:** Job 1303630 queued on EPYC partition.
+
+---
+
+### 2.20 EPYC barrier job status check (2026-06-20)
+
+**What was done:** Confirmed job 1303630 is running on EPYC nodes.
+
+**Prompt:**
+```bash
+squeue -u $USER
+```
+
+**Response:**
+```
+JOBID 1303630  PARTITION EPYC  NAME ex1EPYCa  ST R  TIME 1:53  NODES 2  NODELIST epyc[001-002]
+```
+
+**Outcome:** Job actively running (~2 min elapsed). Within the 2-hour window.
+
+---
+
+### 2.21 EPYC bcast coverage check (2026-06-20)
+
+**What was done:** Verified `bcastEPYC.csv` line count and max processor count per algorithm while barrier job 1303630 was running.
+
+**Prompt:**
+```bash
+cd ~/HPC-exercise/exercise1
+
+echo "bcastEPYC lines: $(wc -l < results/bcastEPYC.csv)"
+for algo in 0 1 2 5; do
+  echo -n "Algo $algo: "
+  awk -F, -v a=$algo '$1==a {print $2}' results/bcastEPYC.csv | sort -n | uniq | tail -1
+done
+```
+
+**Response:**
+```
+bcastEPYC lines: 7309
+Algo 0: 256
+Algo 1: 256
+Algo 2: 256
+Algo 5: 256
+```
+
+**Outcome:** `bcastEPYC.csv` is analysis-ready — all four algorithms tested up to 256 processes.
+
+---
+
+### 2.22 EPYC barrier job progress check (2026-06-20)
+
+**What was done:** Mid-run check on job 1303630 while still executing.
+
+**Prompt:**
+```bash
+sacct -j 1303630 --format=JobID,State,ExitCode,Elapsed | head -5
+wc -l ~/HPC-exercise/exercise1/results/barrierEPYC.csv
+```
+
+**Response:**
+```
+1303630  RUNNING  0:0  00:23:23
+69 results/barrierEPYC.csv
+```
+
+**Outcome:** Job still running (~23 min). CSV growing (21 → 69 lines). Target ~481 lines. On track but not finished — recheck when `squeue` is empty.
+
+---
+
 **Note:** Log entries kept brief per current ai-skill.md guidelines (only what was actually done + prompt + key response excerpt). No future plans included. Long repeated console output (e.g. full ORTE spam) truncated to the essential error message + final time-limit line.
