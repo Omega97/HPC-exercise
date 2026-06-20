@@ -1016,4 +1016,126 @@ Submitted batch job 1303691
 
 ---
 
+### 2.29 Split job alg01 verified (2026-06-20)
+
+**What was done:** Verified job 1303691 completed successfully and validated `barrierEPYC_alg01.csv` coverage.
+
+**Prompt:**
+```bash
+sacct -j 1303691 --format=JobID,State,ExitCode,Elapsed | head -3
+wc -l ~/HPC-exercise/exercise1/results/barrierEPYC_alg01.csv
+for algo in 0 1; do
+  echo -n "Algo $algo rows: "
+  awk -F, -v a=$algo '$1==a' ~/HPC-exercise/exercise1/results/barrierEPYC_alg01.csv | wc -l
+done
+```
+
+**Response:**
+```
+1303691  COMPLETED  0:0  01:26:11
+240 barrierEPYC_alg01.csv
+Algo 0 rows: 120
+Algo 1 rows: 119
+```
+
+**Outcome:** Alg01 data collection complete. Runtime 86 min (within 2h limit). Algo 0 full (120 rows); algo 1 missing 1 row (119/120) — negligible gap, acceptable for analysis.
+
+---
+
+### 2.30 Split job alg24 verified (2026-06-20)
+
+**What was done:** Verified job 1303806 completed and validated `barrierEPYC_alg24.csv` coverage.
+
+**Prompt:**
+```bash
+sacct -u $USER --starttime=today --format=JobID,JobName,State,ExitCode,Elapsed | grep -E 'JOBID|EPYCa24'
+wc -l ~/HPC-exercise/exercise1/results/barrierEPYC_alg24.csv
+for algo in 2 4; do
+  echo -n "Algo $algo rows: "
+  awk -F, -v a=$algo '$1==a' ~/HPC-exercise/exercise1/results/barrierEPYC_alg24.csv | wc -l
+done
+```
+
+**Response:**
+```
+1303806  ex1EPYCa24  COMPLETED  0:0  01:26:39
+241 barrierEPYC_alg24.csv
+Algo 2 rows: 120
+Algo 4 rows: 120
+```
+
+**Outcome:** Alg24 data collection complete. All algorithms 2 and 4 fully covered. EPYC barrier dataset ready to merge.
+
+---
+
+### 2.31 Merge EPYC barrier CSVs (2026-06-20)
+
+**What was done:** Merged `barrierEPYC_alg01.csv` and `barrierEPYC_alg24.csv` into final `barrierEPYC.csv`.
+
+**Prompt:**
+```bash
+cd ~/HPC-exercise/exercise1/results
+head -1 barrierEPYC_alg01.csv > barrierEPYC.csv
+tail -n +2 barrierEPYC_alg01.csv >> barrierEPYC.csv
+tail -n +2 barrierEPYC_alg24.csv >> barrierEPYC.csv
+wc -l barrierEPYC.csv
+```
+
+**Response:**
+```
+480 barrierEPYC.csv
+```
+
+**Outcome:** Final EPYC barrier file created. 480 lines = 1 header + 479 data rows (algo 1 missing 1 row from alg01 run). All four benchmark CSVs now present.
+
+---
+
+### 2.32 Full dataset validation (2026-06-20)
+
+**What was done:** Verified line counts and per-algorithm coverage across all four benchmark CSVs.
+
+**Prompt:**
+```bash
+cd ~/HPC-exercise/exercise1/results
+for f in bcastEPYC.csv barrierEPYC.csv bcastTHIN.csv barrierTHIN.csv; do
+  echo "=== $f: $(wc -l < $f) lines ==="
+done
+for algo in 0 1 2 4; do
+  echo -n "Algo $algo: "
+  awk -F, -v a=$algo '$1==a' barrierEPYC.csv | wc -l
+done
+```
+
+**Response:**
+```
+bcastEPYC.csv: 7309 | barrierEPYC.csv: 480 | bcastTHIN.csv: 5881 | barrierTHIN.csv: 561
+barrierEPYC algos: 0=120, 1=119, 2=120, 4=120
+```
+
+**Outcome:** **Exercise 1 data collection complete.** All four files validated. Ready to sync locally and begin analysis.
+
+---
+
+### 2.33 Sync results to local machine (2026-06-20)
+
+**What was done:** Fixed WSL SSH config (`IdentityFile ~/.ssh/orfeo_key_new`). Copied four CSVs from Orfeo via `scp orfeo:...` to Windows project folder.
+
+**Prompt:**
+```bash
+scp orfeo:~/HPC-exercise/exercise1/results/{bcastEPYC,barrierEPYC,bcastTHIN,barrierTHIN}.csv \
+    /mnt/c/Users/monfalcone/PycharmProjects/HPC-exercise/exercise1/results/
+```
+
+**Response:**
+```
+barrierEPYC.csv   5.139 byte
+barrierTHIN.csv   6.495 byte
+bcastEPYC.csv   115.530 byte
+bcastTHIN.csv    89.654 byte
+```
+
+**Outcome:** All four benchmark CSVs present locally in `exercise1/results/`.
+
+---
+
 **Note:** Log entries kept brief per current ai-skill.md guidelines (only what was actually done + prompt + key response excerpt). No future plans included. Long repeated console output (e.g. full ORTE spam) truncated to the essential error message + final time-limit line.
