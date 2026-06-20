@@ -892,4 +892,128 @@ wc -l ~/HPC-exercise/exercise1/results/barrierEPYC.csv
 
 ---
 
+### 2.23 EPYC barrier job progress at 1h38m (2026-06-20)
+
+**What was done:** Late-stage progress check before expected 2-hour wall limit.
+
+**Prompt:**
+```bash
+wc -l ~/HPC-exercise/exercise1/results/barrierEPYC.csv
+squeue -u $USER
+```
+
+**Response:**
+```
+274 results/barrierEPYC.csv
+1303630  EPYC  ex1EPYCa  R  1:38:04  epyc[001-002]
+```
+
+**Outcome:** ~57% of target data (274/481 lines). ~22 min remain on the clock. Extrapolated finish ~3 h — **likely to TIMEOUT** unless remaining iterations are much faster.
+
+---
+
+### 2.24 EPYC barrier job final result (2026-06-20)
+
+**What was done:** Checked outcome after job 1303630 left the queue.
+
+**Prompt:**
+```bash
+sacct -j 1303630 --format=JobID,State,ExitCode,Elapsed | head -3
+wc -l ~/HPC-exercise/exercise1/results/barrierEPYC.csv
+```
+
+**Response:**
+```
+1303630  TIMEOUT  0:0  02:00:00
+335 results/barrierEPYC.csv
+```
+
+**Outcome:** Job timed out again at the 2-hour wall limit. Collected 335 lines (~70% of 481 target). Partial data usable; remaining ~146 rows need a split rerun strategy.
+
+---
+
+### 2.25 Git pull + split scripts on Orfeo (2026-06-20)
+
+**What was done:** Resolved `git pull` conflict (Orfeo `barrier_latencies.sh` edits matched remote). Pulled split-job scripts.
+
+**Prompt:**
+```bash
+git diff exercise1/scripts/barrier_latencies.sh
+git checkout -- exercise1/scripts/barrier_latencies.sh
+git pull
+ls -l exercise1/scripts/barrier_latencies_alg01.sh exercise1/scripts/barrier_latencies_alg24.sh
+```
+
+**Response:**
+```
+diff: iterations 20→10, -i/-x 1e4→500 (same as remote)
+pull succeeded
+barrier_latencies_alg01.sh  barrier_latencies_alg24.sh  present
+```
+
+**Outcome:** Split scripts ready on Orfeo. Proceeding to submit `barrier_latencies_alg01.sh`.
+
+---
+
+### 2.26 Split job alg01 submitted (2026-06-20)
+
+**What was done:** Backed up partial barrier data (`barrierEPYC_run1.csv` already present). Submitted first split job for algorithms 0+1.
+
+**Prompt:**
+```bash
+chmod +x scripts/barrier_latencies_alg01.sh scripts/barrier_latencies_alg24.sh
+sbatch barrier_latencies_alg01.sh
+```
+
+**Response:**
+```
+Submitted batch job 1303667
+```
+
+**Outcome:** Job 1303667 queued. Expected output: `results/barrierEPYC_alg01.csv` (~241 lines).
+
+---
+
+### 2.27 Split job alg01 result (2026-06-20)
+
+**What was done:** Checked outcome of job 1303667 after leaving the queue.
+
+**Prompt:**
+```bash
+sacct -j 1303667 --format=JobID,State,ExitCode,Elapsed | head -3
+wc -l ~/HPC-exercise/exercise1/results/barrierEPYC_alg01.csv
+```
+
+**Response:**
+```
+1303667  TIMEOUT  0:0  01:00:15
+168 barrierEPYC_alg01.csv
+```
+
+**Outcome:** 1-hour wall time still too short (~240 runs need ~86 min at observed ~15 s/run average; job completed 7/10 outer iterations = 168 lines). Bump split jobs to `--time=02:00:00` and resubmit.
+
+---
+
+### 2.28 Split job alg01 resubmitted with 2h limit (2026-06-20)
+
+**What was done:** Resolved git conflict on split scripts, pulled `02:00:00` wall time, backed up partial alg01 run, resubmitted.
+
+**Prompt:**
+```bash
+git checkout -- exercise1/scripts/barrier_latencies_alg01.sh exercise1/scripts/barrier_latencies_alg24.sh
+git pull
+mv results/barrierEPYC_alg01.csv results/barrierEPYC_alg01_run1.csv
+sbatch barrier_latencies_alg01.sh
+```
+
+**Response:**
+```
+pull succeeded (01:00:00 → 02:00:00)
+Submitted batch job 1303691
+```
+
+**Outcome:** Job 1303691 queued. Expected ~90 min runtime, ~241 lines in `barrierEPYC_alg01.csv`.
+
+---
+
 **Note:** Log entries kept brief per current ai-skill.md guidelines (only what was actually done + prompt + key response excerpt). No future plans included. Long repeated console output (e.g. full ORTE spam) truncated to the essential error message + final time-limit line.
