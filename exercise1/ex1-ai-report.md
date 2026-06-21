@@ -31,7 +31,7 @@ Compare Open MPI collective algorithms on Orfeo using OSU Micro-Benchmarks:
 | `bcastTHIN.csv` | THIN | **Complete** | 5881 | Ready for analysis |
 | `barrierTHIN.csv` | THIN | **Complete** | 561 | Exact expected count (4×7×20 + header) |
 | `bcastEPYC.csv` | EPYC | **Complete** | 7309 | All algos (0,1,2,5) reach 256 procs |
-| `barrierEPYC.csv` | EPYC | **Incomplete** | 335 | Job 1303630 TIMEOUT at 2h (~70% of target) |
+| `barrierEPYC.csv` | EPYC | **Complete** | 480 | Merged from split jobs 1303691 + 1303806 |
 
 ### EPYC barrier troubleshooting (key lessons)
 
@@ -53,18 +53,15 @@ Compare Open MPI collective algorithms on Orfeo using OSU Micro-Benchmarks:
 
 ---
 
-## Current blocker
+## Status (2026-06-20)
 
-**EPYC barrier data is incomplete.** Partial files on Orfeo:
-
-- `barrierEPYC.csv` → rename to `barrierEPYC_run1.csv` (335 lines, job 1303630)
-- `barrierEPYC_partial.csv` (older partial run)
+**Data collection complete.** All four CSVs validated, synced locally, and pushed to GitHub (`cde300e`).
 
 ---
 
 ## Next steps (in order)
 
-### 1. Finish EPYC barrier data (~30 min active work + queue wait)
+### 1. ~~Finish EPYC barrier data~~ ✓ Done
 
 ```bash
 cd ~/HPC-exercise && git pull

@@ -1138,4 +1138,40 @@ bcastTHIN.csv    89.654 byte
 
 ---
 
+### 2.34 Commit and push results to GitHub (2026-06-20)
+
+**What was done:** Committed all four benchmark CSVs, execution log, AI report, and daily note. Pushed to `main`.
+
+**Prompt:**
+```cmd
+git add exercise1/results/*.csv exercise1/ex1_execution_log.md exercise1/ex1-ai-report.md 2026-06-20.md
+git commit -m "Add Exercise 1 benchmark results (EPYC + THIN bcast/barrier)"
+git push
+```
+
+**Response:**
+```
+commit cde300e — 6 files changed, 14384 insertions(+)
+pushed main -> main (97bf42c..cde300e)
+```
+
+**Outcome:** Results and session logs on GitHub. **Exercise 1 data phase complete.** Next: analysis notebook, report, slides.
+
+---
+
+### 2.35 Session summary (2026-06-20)
+
+**Milestone:** Completed Exercise 1 benchmark data collection end-to-end.
+
+| Deliverable | Status |
+|---|---|
+| `bcastEPYC.csv` / `bcastTHIN.csv` | Complete |
+| `barrierEPYC.csv` / `barrierTHIN.csv` | Complete (split jobs 1303691 + 1303806) |
+| Local sync + GitHub push | Complete |
+| Analysis / report / slides | Not started |
+
+**Key fixes today:** Orfeo 2h wall limit; workload tuning; split barrier into alg01+alg24 jobs; WSL SSH `IdentityFile` fix; removed stale `exercise_1/` on Orfeo.
+
+---
+
 **Note:** Log entries kept brief per current ai-skill.md guidelines (only what was actually done + prompt + key response excerpt). No future plans included. Long repeated console output (e.g. full ORTE spam) truncated to the essential error message + final time-limit line.
