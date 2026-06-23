@@ -17,8 +17,8 @@ while getopts "abc" opt; do
       fi
       ;;
     c) # Build binary files with a simple command line
-      mkdir ../bin
-      mpicc -fopenmp -O3 -march=native ../apps/main.c ../src/mandelbrot.c -I../include/ -o ../bin/mandelbrot
+      mkdir -p ../bin
+      gcc -fopenmp -O3 -march=native ../apps/main.c ../src/mandelbrot.c -I../include/ -o ../bin/mandelbrot
       if [ $? -eq 0 ]; then
         echo "✅ Executable successfully created in the bin directory."
       else
