@@ -32,7 +32,8 @@ for threads in "${number_workers[@]}"; do
   n=$(echo "sqrt($threads * $C)" | bc -l | xargs printf "%.0f")
   export OMP_NUM_THREADS="${threads}"
   result=$("${executable}" "${n}" "${n}" /dev/null)
-  tail -n 1 <<< "$result" | awk '{print '"${threads}"','"${n}"'," $4}' >> "${output_file}"
+  walltime=$(echo "$result" | awk '/Total Walltime/{print $4}')
+  echo "${threads},${n},${walltime}" >> "${output_file}"
 done
 
 job_id=$SLURM_JOB_ID

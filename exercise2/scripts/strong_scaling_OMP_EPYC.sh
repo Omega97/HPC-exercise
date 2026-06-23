@@ -5,7 +5,7 @@
 #SBATCH --cpus-per-task=64
 #SBATCH --output=output_epyc.%j.out
 #SBATCH --error=error_epyc.%j.err
-#SBATCH --time=02:00:00
+#SBATCH --time=00:45:00
 #SBATCH --partition=EPYC
 #SBATCH --nodelist=epyc003
 #SBATCH --exclusive
@@ -29,7 +29,8 @@ export OMP_PROC_BIND=close
 for threads in "${number_workers[@]}"; do
   export OMP_NUM_THREADS="${threads}"
   result=$("${executable}" "${n}" "${n}" /dev/null)
-  tail -n 1 <<< "$result" | awk '{print '"${threads}"','"${n}"'," $4}' >> "${output_file}"
+  walltime=$(echo "$result" | awk '/Total Walltime/{print $4}')
+  echo "${threads},${n},${walltime}" >> "${output_file}"
 done
 
 job_id=$SLURM_JOB_ID
