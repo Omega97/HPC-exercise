@@ -12,6 +12,8 @@
 
 # OpenMP strong scaling: fixed problem size, vary thread count.
 
+cd "${SLURM_SUBMIT_DIR}" || exit 1
+
 executable="../build/bin/mandelbrot"
 output_dir="../results/"
 output_file="${output_dir}strong_scaling_OMP_EPYC.csv"

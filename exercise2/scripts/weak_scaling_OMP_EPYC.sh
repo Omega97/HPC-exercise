@@ -12,6 +12,8 @@
 
 # OpenMP weak scaling: constant work per thread (C pixels).
 
+cd "${SLURM_SUBMIT_DIR}" || exit 1
+
 executable="../build/bin/mandelbrot"
 output_dir="../results/"
 output_file="${output_dir}weak_scaling_OMP_EPYC.csv"

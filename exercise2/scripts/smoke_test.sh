@@ -10,8 +10,9 @@
 #SBATCH --nodelist=epyc003
 
 # Quick validation: build, run small image, write PGM.
+# SLURM copies the script to spool; use submit dir for relative paths.
 
-cd "$(dirname "$0")" || exit 1
+cd "${SLURM_SUBMIT_DIR}" || exit 1
 bash make.sh -b
 
 executable="../build/bin/mandelbrot"
