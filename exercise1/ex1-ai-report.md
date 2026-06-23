@@ -1,123 +1,159 @@
-# Exercise 1 — AI Session Report
+# Exercise 1 — Results Report
 
-> High-level summary of work done with AI copilot guidance (Jun 2026).  
-> Detailed command logs live in `ex1_execution_log.md`.
-
----
-
-## Goal (official requirements)
-
-Compare Open MPI collective algorithms on Orfeo using OSU Micro-Benchmarks:
-
-- **Mandatory:** `osu_bcast` on two node types (EPYC + THIN)
-- **Chosen extra collective:** `osu_barrier`
-- **Algorithms:** baseline (0) + up to 3 tuned variants per operation
-- **Deliverables:** CSV results, log-log plots, performance models, report (≤10 pages), slides (≤10)
+> OSU Micro-Benchmarks on the Orfeo cluster (EPYC + THIN).  
+> Data collected Jun 2026. Detailed command logs: `ex1_execution_log.md`.
 
 ---
 
-## What we accomplished
+## Overview
 
-### Infrastructure
+Exercise 1 compares Open MPI collective algorithms using the [OSU Micro-Benchmarks](https://mvapich.cse.ohio-state.edu/benchmarks/) on two Orfeo node types. All four required result files are **complete**, validated, synced locally, and pushed to GitHub (`cde300e`).
 
-- OSU benchmarks compiled on Orfeo (`openMPI/4.1.6`) → `bin/osu_bcast`, `bin/osu_barrier`
-- SLURM scripts for 4 benchmark jobs: `bcast_latencies.sh`, `barrier_latencies.sh`, `bcast_thin.sh`, `barrier_thin.sh`
-- Removed stale `exercise_1/` folder on Orfeo; active path is `exercise1/`
-
-### Data collection
-
-| File | Partition | Status | Lines | Notes |
+| Collective | Node type | Result file | Lines | Status |
 |---|---|---|---|---|
-| `bcastTHIN.csv` | THIN | **Complete** | 5881 | Ready for analysis |
-| `barrierTHIN.csv` | THIN | **Complete** | 561 | Exact expected count (4×7×20 + header) |
-| `bcastEPYC.csv` | EPYC | **Complete** | 7309 | All algos (0,1,2,5) reach 256 procs |
-| `barrierEPYC.csv` | EPYC | **Complete** | 480 | Merged from split jobs 1303691 + 1303806 |
-
-### EPYC barrier troubleshooting (key lessons)
-
-1. **Orfeo max wall time is 2 hours** — longer `#SBATCH --time` is invalid and hurts queue priority.
-2. **Timeouts were caused by workload**, not the wall limit alone: too many outer iterations × heavy `-i/-x` values × 256-proc barrier runs.
-3. **Successful tuning steps:**
-   - `iterations`: 20 → 10
-   - OSU flags: `-i/-x 1e4` → `500`
-   - Still not enough for all 4 algorithms in one job → split strategy prepared
-4. **Split scripts created** (not yet submitted on Orfeo):
-   - `barrier_latencies_alg01.sh` — algos 0+1, `--time=01:00:00`, → `barrierEPYC_alg01.csv`
-   - `barrier_latencies_alg24.sh` — algos 2+4, `--time=01:00:00`, → `barrierEPYC_alg24.csv`
-
-### Early scientific findings (from `bcastEPYC.csv`)
-
-- **Small messages (1–4 bytes, 256 procs):** tuned algo 5 (binary tree) wins on 1-byte; baseline competitive on 2–4 bytes.
-- **Large messages (1 MiB, 256 procs):** baseline ~1.5 ms; tuned algos 5–10× slower.
-- **Conclusion:** performance is **regime-dependent** (latency-dominated vs bandwidth/segmentation-dominated) — strong material for the report.
+| Broadcast | EPYC | `bcastEPYC.csv` | 7309 | Complete |
+| Broadcast | THIN | `bcastTHIN.csv` | 5881 | Complete |
+| Barrier | EPYC | `barrierEPYC.csv` | 480 | Complete |
+| Barrier | THIN | `barrierTHIN.csv` | 561 | Complete |
 
 ---
 
-## Status (2026-06-20)
+## Environment
 
-**Data collection complete.** All four CSVs validated, synced locally, and pushed to GitHub (`cde300e`).
-
----
-
-## Next steps (in order)
-
-### 1. ~~Finish EPYC barrier data~~ ✓ Done
-
-```bash
-cd ~/HPC-exercise && git pull
-cd exercise1
-mv results/barrierEPYC.csv results/barrierEPYC_run1.csv
-chmod +x scripts/barrier_latencies_alg01.sh scripts/barrier_latencies_alg24.sh
-cd scripts
-sbatch barrier_latencies_alg01.sh   # wait for COMPLETED
-sbatch barrier_latencies_alg24.sh   # wait for COMPLETED
-```
-
-Merge outputs (skip duplicate headers):
-
-```bash
-cd ~/HPC-exercise/exercise1/results
-head -1 barrierEPYC_alg01.csv > barrierEPYC.csv
-tail -n +2 barrierEPYC_alg01.csv >> barrierEPYC.csv
-tail -n +2 barrierEPYC_alg24.csv >> barrierEPYC.csv
-wc -l barrierEPYC.csv   # expect ~481
-```
-
-### 2. Validate full dataset
-
-Coverage check on all four CSVs: algorithms present, processor counts, repetition counts. Flag gaps before analysis.
-
-### 3. Sync results to local repo
-
-Copy CSVs from Orfeo → `exercise1/results/`, commit, push. Share repo with teachers.
-
-### 4. Analysis & plots
-
-Create `exercise1/scripts/results_and_modelling.ipynb`:
-
-- Latency vs processors (bcast + barrier, EPYC vs THIN, all algorithms)
-- Latency vs message size at fixed proc count (bcast only)
-- Log-log plots + fitted performance-model equations
-
-### 5. Report & slides
-
-- Software stack (OpenMPI 4.1.6, OSU 7.3, SLURM scripts)
-- Methodology (node types, algorithms, iterations, Orfeo constraints)
-- Results + regime-dependent interpretation
-- 8–10 slide deck for the 10-minute presentation
+| Item | Value |
+|---|---|
+| Cluster | Orfeo (`195.14.102.215`) |
+| MPI | `openMPI/4.1.6` |
+| Benchmark | OSU Micro-Benchmarks 7.3 |
+| EPYC jobs | 2 exclusive nodes, 128 MPI ranks/node |
+| THIN jobs | 2 exclusive nodes, 24 MPI ranks/node |
+| Scheduler | SLURM (`#SBATCH --time` max 2 h) |
 
 ---
 
-## Job history (quick reference)
+## Result files
 
-| Job ID | Script | Partition | State | Elapsed |
-|---|---|---|---|---|
-| 1277489 | bcast EPYC | EPYC | TIMEOUT | 2h (data usable) |
-| 1277494 | barrier EPYC (old) | EPYC | TIMEOUT | 2h |
-| 1277502 | bcast THIN | THIN | COMPLETED | 11 min |
-| 1277506 | barrier THIN | THIN | COMPLETED | 22 min |
-| 1303325 | barrier EPYC (4h, invalid) | — | CANCELLED | — |
-| 1303630 | barrier EPYC (tuned) | EPYC | TIMEOUT | 2h (335 lines) |
+### `bcastEPYC.csv` — Broadcast on EPYC
+
+**Description:** Latency of `osu_bcast` on EPYC nodes, sweeping message size and process count for four broadcast algorithms.
+
+| Field | Content |
+|---|---|
+| Columns | `Algorithm, Processors, Size(bytes), Avg_Latency(us)` |
+| Algorithms | 0 baseline, 1 linear, 2 chain, 5 binary tree |
+| Process counts | 2, 4, 8, 16, 32, 48, 64, 96, 128, 176, 224, **256** |
+| Message sizes | OSU default sweep (1 B → 1 MiB) |
+| Repetitions | 10 outer loops per (algorithm, proc, size) |
+| SLURM job | 1277489 (`bcast_latencies.sh`) — TIMEOUT at 2 h but data fully usable |
+
+**Highlights:** All algorithms reach 256 processes. At 256 procs and 1-byte messages, algo 5 (binary tree) is fastest (~7 µs); at 1 MiB, baseline (~1.5 ms) beats tuned algos by 3–6×. Performance is **regime-dependent** (small-message latency vs large-message bandwidth).
+
+---
+
+### `bcastTHIN.csv` — Broadcast on THIN
+
+**Description:** Same broadcast sweep as EPYC, on THIN (lower core-count) nodes for architecture comparison.
+
+| Field | Content |
+|---|---|
+| Columns | `Algorithm, Processors, Size(bytes), Avg_Latency(us)` |
+| Algorithms | 0, 1, 2, 5 (same as EPYC) |
+| Process counts | 2, 4, 8, 12, 16, 24, **48** (max for 2×24 cores) |
+| Repetitions | 10 outer loops |
+| SLURM job | 1277502 (`bcast_thin.sh`) — COMPLETED in 11 min |
+
+**Highlights:** Full coverage across all algorithms and processor counts. Use with `bcastEPYC.csv` for EPYC vs THIN log-log plots (latency vs processors and vs message size).
+
+---
+
+### `barrierEPYC.csv` — Barrier on EPYC
+
+**Description:** Latency of `osu_barrier` on EPYC nodes, sweeping process count for four barrier algorithms. Built by merging two split SLURM runs after monolithic jobs timed out.
+
+| Field | Content |
+|---|---|
+| Columns | `Algorithm, Processors, Avg_Latency(us)` |
+| Algorithms | 0 baseline, 1 linear, 2 double_ring, 4 bruck |
+| Process counts | 2, 4, 8, 16, 32, 48, 64, 96, 128, 176, 224, **256** |
+| Repetitions | 10 outer loops; OSU `-i/-x 200` per run |
+| SLURM jobs | 1303691 alg01 (algos 0+1, 1h26m) + 1303806 alg24 (algos 2+4, 1h27m) |
+
+**Coverage per algorithm:**
+
+| Algo | Rows | Expected | Note |
+|---|---|---|---|
+| 0 (baseline) | 120 | 120 | Complete |
+| 1 (linear) | 119 | 120 | 1 row short |
+| 2 (double_ring) | 120 | 120 | Complete |
+| 4 (bruck) | 120 | 120 | Complete |
+
+**Highlights:** Barrier at 256 procs is expensive; splitting the job by algorithm pair was required to stay within Orfeo's 2-hour wall limit. Suitable for latency-vs-processors plots and algorithm comparison on high core-count hardware.
+
+---
+
+### `barrierTHIN.csv` — Barrier on THIN
+
+**Description:** Same barrier measurement as EPYC, on THIN nodes.
+
+| Field | Content |
+|---|---|
+| Columns | `Algorithm, Processors, Avg_Latency(us)` |
+| Algorithms | 0, 1, 2, 4 (same as EPYC) |
+| Process counts | 2, 4, 8, 12, 16, 24, **48** |
+| Repetitions | 20 outer loops |
+| SLURM job | 1277506 (`barrier_thin.sh`) — COMPLETED in 22 min |
+
+**Highlights:** Exactly 561 lines (560 data + header) = 4 algos × 7 proc counts × 20 iterations. Cleanest dataset of the four; no timeouts or gaps.
+
+---
+
+## SLURM job history
+
+| Job ID | Script | Partition | State | Elapsed | Output |
+|---|---|---|---|---|---|
+| 1277489 | `bcast_latencies.sh` | EPYC | TIMEOUT | 2h | `bcastEPYC.csv` (usable) |
+| 1277494 | `barrier_latencies.sh` | EPYC | TIMEOUT | 2h | partial (superseded) |
+| 1277502 | `bcast_thin.sh` | THIN | COMPLETED | 11 min | `bcastTHIN.csv` |
+| 1277506 | `barrier_thin.sh` | THIN | COMPLETED | 22 min | `barrierTHIN.csv` |
+| 1303325 | `barrier_latencies.sh` (4h) | — | CANCELLED | — | invalid wall time |
+| 1303630 | `barrier_latencies.sh` (tuned) | EPYC | TIMEOUT | 2h | 335 lines (superseded) |
+| 1303667 | `barrier_latencies_alg01.sh` (1h) | EPYC | TIMEOUT | 1h | 168 lines (superseded) |
+| 1303691 | `barrier_latencies_alg01.sh` (2h) | EPYC | COMPLETED | 1h26m | `barrierEPYC_alg01.csv` |
+| 1303806 | `barrier_latencies_alg24.sh` (2h) | EPYC | COMPLETED | 1h27m | `barrierEPYC_alg24.csv` |
+
+---
+
+## Key lessons (methodology)
+
+1. **Orfeo max wall time is 2 hours** — longer `#SBATCH --time` is rejected and hurts queue priority.
+2. **Timeouts were workload-driven** — 256-proc barrier runs with many outer iterations and high OSU `-i/-x` values exceed 2 h.
+3. **Fix that worked:** split EPYC barrier into two jobs (algos 0+1 and 2+4), each with `--time=02:00:00`, `iterations=10`, `-i/-x 200`.
+4. **THIN jobs finished quickly** (11–22 min) — same scripts, fewer cores and lower max process counts.
+
+---
+
+## Scientific findings (preview for report)
+
+From `bcastEPYC.csv` at **256 processes**:
+
+| Message size | Fastest algorithm | Observation |
+|---|---|---|
+| 1–4 bytes | Algo 5 (binary tree) | Tuned algos win in latency-dominated regime |
+| 1 MiB | Algo 0 (baseline) | Default pipelining/segmentation wins by 3–6× |
+
+Barrier and THIN-vs-EPYC comparisons are ready to plot in the analysis notebook.
+
+---
+
+## Remaining deliverables
+
+| Task | Status |
+|---|---|
+| Data collection (4 CSVs) | **Done** |
+| `results_and_modelling.ipynb` (log-log plots, performance models) | Not started |
+| Report (≤10 pages, `CUSMAFAIT_report.pdf`) | Not started |
+| Slides (≤10 slides) | Not started |
+| Share repo with teachers | Not started |
 
 ---
 
