@@ -19,6 +19,12 @@ BCAST_LABELS = {
     2: "2 — chain",
     5: "5 — binary tree",
 }
+BCAST_MPI_NAMES = {
+    0: "default",
+    1: "basic_linear",
+    2: "chain",
+    5: "binary_tree",
+}
 BARRIER_LABELS = {
     0: "0 — baseline",
     1: "1 — linear",
@@ -29,6 +35,7 @@ ALGO_COLORS = {0: "#2563eb", 1: "#dc2626", 2: "#16a34a", 4: "#7c3aed", 5: "#ea58
 
 EPYC_PROCS = (2, 4, 8, 16, 32, 64, 128, 256)
 THIN_PROCS = (2, 4, 8, 12, 16, 24, 48)
+SIZE_1KIB = 1024
 SIZE_1MIB = 1_048_576
 
 
@@ -109,6 +116,39 @@ def plot_bcast_vs_procs_1mib() -> None:
     print(f"Wrote {out}")
 
 
+def plot_bcast_latency_vs_procs() -> None:
+    df = median_bcast(RESULTS / "bcastEPYC.csv")
+    subset = df[
+        (df["Size(bytes)"] == SIZE_1KIB)
+        & (df["Processors"].isin(EPYC_PROCS))
+        & (df["Algorithm"].isin(BCAST_ALGOS))
+    ]
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    for algo in BCAST_ALGOS:
+        block = subset[subset["Algorithm"] == algo].sort_values("Processors")
+        ax.loglog(
+            block["Processors"],
+            block["Avg_Latency(us)"],
+            "o-",
+            color=ALGO_COLORS[algo],
+            label=BCAST_MPI_NAMES[algo],
+            markersize=6,
+            linewidth=2,
+        )
+
+    ax.set_xlabel("Number of processes")
+    ax.set_ylabel("Latency (µs)")
+    ax.set_title("MPI_Bcast latency vs processes (EPYC, 1 KiB message)")
+    ax.legend(loc="best", fontsize=10)
+    ax.grid(True, which="both", alpha=0.3)
+    fig.tight_layout()
+    out = PLOTS / "bcast_latency_vs_procs.png"
+    fig.savefig(out, dpi=150)
+    plt.close(fig)
+    print(f"Wrote {out}")
+
+
 def plot_barrier_epyc() -> None:
     df = median_barrier(RESULTS / "barrierEPYC.csv")
     subset = df[(df["Processors"].isin(EPYC_PROCS)) & (df["Algorithm"].isin(BARRIER_ALGOS))]
@@ -140,6 +180,7 @@ def plot_barrier_epyc() -> None:
 
 def main() -> None:
     plot_bcast_vs_size()
+    plot_bcast_latency_vs_procs()
     plot_bcast_vs_procs_1mib()
     plot_barrier_epyc()
 
